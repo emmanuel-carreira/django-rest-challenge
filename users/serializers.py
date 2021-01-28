@@ -1,7 +1,30 @@
 from django.core.validators import EmailValidator
 from rest_framework import serializers
 
-from .models import Profile
+from .models import Profile, Phone
+
+
+class PhoneSerializer(serializers.ModelSerializer):
+    number = serializers.IntegerField(max_value=2147483647, required=False)
+    area_code = serializers.IntegerField(max_value=32767, required=False)
+    country_code = serializers.CharField(max_length=4, required=False)
+
+    class Meta:
+        model = Phone
+        exclude = ['profile']
+
+    def update(self, instance, validated_data):
+        raise serializers.ValidationError('Update not allowed')
+
+    def validate(self, data):
+        number = data.get('number')
+        area_code = data.get('area_code')
+        country_code = data.get('country_code')
+
+        if not (number and area_code and country_code):
+            raise serializers.ValidationError('Missing fields')
+
+        return data
 
 
 class ProfileSerializer(serializers.ModelSerializer):
@@ -11,6 +34,7 @@ class ProfileSerializer(serializers.ModelSerializer):
     password = serializers.CharField(max_length=255, write_only=True)
     created_at = serializers.DateTimeField(required=False)
     last_login = serializers.DateTimeField(required=False)
+    phones = PhoneSerializer(many=True)
 
     class Meta:
         model = Profile
@@ -18,7 +42,13 @@ class ProfileSerializer(serializers.ModelSerializer):
         read_only_fields = ['created_at', 'last_login']
 
     def create(self, validated_data):
-        return Profile.objects.create(**validated_data)
+        phones = validated_data.pop('phones', [])
+        profile = Profile.objects.create(**validated_data)
+
+        for phone in phones:
+            Phone.objects.create(profile=profile, **phone)
+
+        return profile
 
     def update(self, instance, validated_data):
         raise serializers.ValidationError('Update not allowed')

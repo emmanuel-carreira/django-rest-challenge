@@ -18,7 +18,9 @@ class ProfileCreateView(generics.CreateAPIView):
             serializer.save()
             return Response(status=status.HTTP_200_OK)
 
-        message = serializer.errors.get('non_field_errors')
+        error = serializer.errors.get('non_field_errors')
+        if not error:
+            error = serializer.errors.get('phones')[0].get('non_field_errors')
 
-        json_error = {"message": message, "errorCode": 400}
+        json_error = {"message": error, "errorCode": 400}
         return Response(json_error, status=status.HTTP_400_BAD_REQUEST)
