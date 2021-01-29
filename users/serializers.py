@@ -28,13 +28,19 @@ class PhoneSerializer(serializers.ModelSerializer):
 
 
 class ProfileSerializer(serializers.ModelSerializer):
-    first_name = serializers.CharField(max_length=50, required=False)
-    last_name = serializers.CharField(max_length=50, required=False)
+    first_name = serializers.CharField(
+        max_length=50, required=False, allow_blank=True
+    )
+    last_name = serializers.CharField(
+        max_length=50, required=False, allow_blank=True
+    )
     email = serializers.EmailField(required=False)
-    password = serializers.CharField(max_length=255, write_only=True)
+    password = serializers.CharField(
+        max_length=255, write_only=True, required=False, allow_blank=True
+    )
     created_at = serializers.DateTimeField(required=False)
     last_login = serializers.DateTimeField(required=False)
-    phones = PhoneSerializer(many=True)
+    phones = PhoneSerializer(many=True, required=False)
 
     class Meta:
         model = Profile
@@ -58,8 +64,9 @@ class ProfileSerializer(serializers.ModelSerializer):
         last_name = data.get('last_name')
         email = data.get('email')
         password = data.get('password')
+        phones = data.get('phones')
 
-        if not (first_name and last_name and email and password):
+        if not (first_name and last_name and email and password and phones):
             raise serializers.ValidationError('Missing fields')
 
         if Profile.objects.filter(email=email).exists():

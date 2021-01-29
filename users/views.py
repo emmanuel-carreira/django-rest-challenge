@@ -2,6 +2,7 @@ from rest_framework.response import Response
 from rest_framework import generics, status
 
 from .serializers import ProfileSerializer
+from .utils import get_token_for_profile
 
 
 class ProfileCreateView(generics.CreateAPIView):
@@ -15,8 +16,12 @@ class ProfileCreateView(generics.CreateAPIView):
         serializer = self.get_serializer(data=data)
 
         if serializer.is_valid():
-            serializer.save()
-            return Response(status=status.HTTP_200_OK)
+            profile = serializer.save()
+            token = get_token_for_profile(profile)
+            response_data = {
+                'user': serializer.data, 'token': token
+            }
+            return Response(response_data, status=status.HTTP_200_OK)
 
         error = serializer.errors.get('non_field_errors')
         if not error:
