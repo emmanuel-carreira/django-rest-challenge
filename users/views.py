@@ -74,4 +74,3 @@ class UserRetrieveView(generics.RetrieveAPIView):
         response_data = {'user': serializer.data}
 
         return Response(response_data, status=status.HTTP_200_OK)
-
