@@ -5,6 +5,7 @@ django-extensions==3.1.0
 djangorestframework==3.12.2
 djangorestframework-simplejwt==4.6.0
 flake8==3.8.4
+gunicorn==20.0.4
 iniconfig==1.1.1
 mccabe==0.6.1
 model-bakery==1.2.1
