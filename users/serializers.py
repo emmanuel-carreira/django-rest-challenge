@@ -2,6 +2,7 @@ from django.core.validators import EmailValidator
 from rest_framework import serializers
 
 from .models import User, Phone
+from .utils import get_token_for_user
 
 
 class PhoneSerializer(serializers.ModelSerializer):
@@ -44,7 +45,7 @@ class UserModelSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        exclude = ['is_active']
+        exclude = ['id', 'is_active']
         read_only_fields = ['created_at', 'last_login']
 
     def create(self, validated_data):
@@ -74,5 +75,39 @@ class UserModelSerializer(serializers.ModelSerializer):
 
         if User.objects.filter(email=email).exists():
             raise serializers.ValidationError('E-mail already exists')
+
+        return data
+
+
+class UserLoginSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=False)
+    password = serializers.CharField(max_length=128, required=False)
+
+    def create(self, validated_data):
+        email = validated_data.get('email')
+        user = User.objects.get(email=email)
+        user.update_last_login()
+
+        user_serializer = UserModelSerializer(user)
+        response_data = {
+            'user': user_serializer.data,
+            'token': get_token_for_user(user)
+        }
+
+        return response_data
+
+    def validate(self, data):
+        email = data.get('email', '')
+        password = data.get('password', '')
+
+        if not (email and password):
+            raise serializers.ValidationError('Missing fields')
+
+        if not User.objects.filter(email=email).exists():
+            raise serializers.ValidationError('Invalid e-mail or password')
+
+        user = User.objects.get(email=email)
+        if not user.check_password(password):
+            raise serializers.ValidationError('Invalid e-mail or password')
 
         return data

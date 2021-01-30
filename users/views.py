@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import generics, status, views
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
-from .serializers import UserModelSerializer
+from .serializers import UserModelSerializer, UserLoginSerializer
 from .utils import get_token_for_user
 
 
@@ -30,6 +30,21 @@ class UserCreateView(generics.CreateAPIView):
         if not error:
             error = serializer.errors.get('phones')[0].get('non_field_errors')
 
+        response_data = {
+            'message': error,
+            'errorCode': 400
+        }
+        return Response(response_data, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserLoginView(views.APIView):
+    def post(self, request):
+        serializer = UserLoginSerializer(data=request.data)
+        if serializer.is_valid():
+            response_data = serializer.save()
+            return Response(response_data, status=status.HTTP_200_OK)
+
+        error = serializer.errors.get('non_field_errors')
         response_data = {
             'message': error,
             'errorCode': 400

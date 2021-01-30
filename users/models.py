@@ -1,8 +1,10 @@
 from django.db import models
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.utils.translation import ugettext_lazy as _
+from django.utils import timezone
 
 from .managers import UserManager
+
 
 class User(AbstractBaseUser):
     email = models.EmailField(_('E-mail'), unique=True)
@@ -23,6 +25,10 @@ class User(AbstractBaseUser):
 
     def get_short_name(self):
         return self.first_name
+
+    def update_last_login(self):
+        self.last_login = timezone.now()
+        self.save()
 
 
 class Phone(models.Model):
