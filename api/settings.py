@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ['SECRET_KEY']
 DEBUG = os.environ['DEBUG']
@@ -83,6 +83,7 @@ USE_L10N = True
 
 USE_TZ = True
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATIC_URL = '/static/'
 STATICFILES_DIRS = (
