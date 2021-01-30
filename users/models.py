@@ -29,7 +29,7 @@ class Phone(models.Model):
     number = models.PositiveIntegerField(_('Número'))
     area_code = models.PositiveSmallIntegerField(_('DDD'))
     country_code = models.CharField(_('DDI'), max_length=4)
-    profile = models.ForeignKey(
+    user = models.ForeignKey(
         User, verbose_name=_('Usuário'),
         on_delete=models.CASCADE, related_name='phones'
     )

@@ -1,12 +1,12 @@
 from rest_framework.response import Response
 from rest_framework import generics, status
 
-from .serializers import ProfileSerializer
-from .utils import get_token_for_profile
+from .serializers import UserModelSerializer
+from .utils import get_token_for_user
 
 
-class ProfileCreateView(generics.CreateAPIView):
-    serializer_class = ProfileSerializer
+class UserCreateView(generics.CreateAPIView):
+    serializer_class = UserModelSerializer
 
     def post(self, request):
         data = request.data
@@ -16,8 +16,8 @@ class ProfileCreateView(generics.CreateAPIView):
         serializer = self.get_serializer(data=data)
 
         if serializer.is_valid():
-            profile = serializer.save()
-            token = get_token_for_profile(profile)
+            user = serializer.save()
+            token = get_token_for_user(user)
             response_data = {
                 'user': serializer.data, 'token': token
             }

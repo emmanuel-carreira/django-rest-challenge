@@ -1,7 +1,7 @@
 from django.core.validators import EmailValidator
 from rest_framework import serializers
 
-from .models import Profile, Phone
+from .models import User, Phone
 
 
 class PhoneSerializer(serializers.ModelSerializer):
@@ -11,7 +11,7 @@ class PhoneSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Phone
-        exclude = ['profile']
+        exclude = ['user']
 
     def update(self, instance, validated_data):
         raise serializers.ValidationError('Update not allowed')
@@ -27,7 +27,7 @@ class PhoneSerializer(serializers.ModelSerializer):
         return data
 
 
-class ProfileSerializer(serializers.ModelSerializer):
+class UserModelSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(
         max_length=50, required=False, allow_blank=True
     )
@@ -43,18 +43,21 @@ class ProfileSerializer(serializers.ModelSerializer):
     phones = PhoneSerializer(many=True, required=False)
 
     class Meta:
-        model = Profile
+        model = User
         fields = '__all__'
         read_only_fields = ['created_at', 'last_login']
 
     def create(self, validated_data):
         phones = validated_data.pop('phones', [])
-        profile = Profile.objects.create(**validated_data)
+        password = validated_data.pop('password')
+        user = User.objects.create(**validated_data)
+        user.set_password(password)
+        user.save()
 
         for phone in phones:
-            Phone.objects.create(profile=profile, **phone)
+            Phone.objects.create(user=user, **phone)
 
-        return profile
+        return user
 
     def update(self, instance, validated_data):
         raise serializers.ValidationError('Update not allowed')
@@ -69,7 +72,7 @@ class ProfileSerializer(serializers.ModelSerializer):
         if not (first_name and last_name and email and password and phones):
             raise serializers.ValidationError('Missing fields')
 
-        if Profile.objects.filter(email=email).exists():
+        if User.objects.filter(email=email).exists():
             raise serializers.ValidationError('E-mail already exists')
 
         return data
