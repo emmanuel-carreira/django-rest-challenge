@@ -1,7 +1,9 @@
 from django.core.validators import EmailValidator
 from rest_framework import serializers
 
-from .constants import MISSING_FIELD_ERORR
+from .constants import (
+    MISSING_FIELD_ERROR, EMAIL_ALREADY_REGISTERED_ERROR, INVALID_LOGIN_ERROR
+)
 from .models import User, Phone
 from .utils import get_token_for_user
 
@@ -27,7 +29,7 @@ class PhoneSerializer(serializers.ModelSerializer):
         country_code = data.get('country_code')
 
         if not (number and area_code and country_code):
-            raise serializers.ValidationError(MISSING_FIELD_ERORR)
+            raise serializers.ValidationError(MISSING_FIELD_ERROR)
 
         return data
 
@@ -75,10 +77,10 @@ class UserModelSerializer(serializers.ModelSerializer):
         phones = data.get('phones')
 
         if not (first_name and last_name and email and password and phones):
-            raise serializers.ValidationError(MISSING_FIELD_ERORR)
+            raise serializers.ValidationError(MISSING_FIELD_ERROR)
 
         if User.objects.filter(email=email).exists():
-            raise serializers.ValidationError('E-mail already exists')
+            raise serializers.ValidationError(EMAIL_ALREADY_REGISTERED_ERROR)
 
         return data
 
@@ -105,13 +107,13 @@ class UserLoginSerializer(serializers.Serializer):
         password = data.get('password', '')
 
         if not (email and password):
-            raise serializers.ValidationError(MISSING_FIELD_ERORR)
+            raise serializers.ValidationError(MISSING_FIELD_ERROR)
 
         if not User.objects.filter(email=email).exists():
-            raise serializers.ValidationError('Invalid e-mail or password')
+            raise serializers.ValidationError(INVALID_LOGIN_ERROR)
 
         user = User.objects.get(email=email)
         if not user.check_password(password):
-            raise serializers.ValidationError('Invalid e-mail or password')
+            raise serializers.ValidationError(INVALID_LOGIN_ERROR)
 
         return data
