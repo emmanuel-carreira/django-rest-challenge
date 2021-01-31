@@ -6,8 +6,8 @@
 docker-compose up -d --build
 
 ### Apply migrations
-docker exec -it djangorestchallenge_web_1 bash
-python manage.py migrate
+docker exec -it web bash
+./startup.sh
 
 ### Create superuser
 python manage.py createsuperuser
