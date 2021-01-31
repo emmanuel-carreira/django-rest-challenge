@@ -1,5 +1,6 @@
 asgiref==3.3.1
 attrs==20.3.0
+dj-database-url==0.5.0
 Django==3.1.5
 django-extensions==3.1.0
 djangorestframework==3.12.2
@@ -11,6 +12,7 @@ mccabe==0.6.1
 model-bakery==1.2.1
 packaging==20.9
 pluggy==0.13.1
+psycopg2==2.8.6
 py==1.10.0
 pycodestyle==2.6.0
 pyflakes==2.2.0
@@ -21,3 +23,4 @@ pytest-django==4.1.0
 pytz==2020.5
 sqlparse==0.4.1
 toml==0.10.2
+whitenoise==5.2.0
