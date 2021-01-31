@@ -20,7 +20,7 @@ class UserModelTests(TestCase):
         """Checks if get_full_name() returns the user's name correctly"""
         full_name = self.user.get_full_name()
         expected_full_name = self.first_name + ' ' + self.last_name
-        self.assertEquals(
+        self.assertEqual(
             full_name,
             expected_full_name,
             msg="""get_full_name() returned incorrect name. Expected: {}.
@@ -30,7 +30,7 @@ class UserModelTests(TestCase):
     def test_get_short_name(self):
         """Checks if get_short_name() returns the user's first name"""
         first_name = self.user.get_short_name()
-        self.assertEquals(
+        self.assertEqual(
             first_name,
             self.first_name,
             msg="""get_short_name() returned the user's first name incorrectly.
