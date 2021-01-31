@@ -1,11 +1,17 @@
 from django.test import TestCase
+from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
+from datetime import datetime
 from model_bakery import baker
 
-from users.constants import MISSING_FIELD_ERROR, EMAIL_ALREADY_REGISTERED_ERROR
+from users.constants import (
+    MISSING_FIELD_ERROR, EMAIL_ALREADY_REGISTERED_ERROR, INVALID_LOGIN_ERROR
+)
 from users.models import User, Phone
-from users.serializers import PhoneSerializer, UserModelSerializer
+from users.serializers import (
+    PhoneSerializer, UserModelSerializer, UserLoginSerializer
+)
 
 
 class PhoneSerializerTests(TestCase):
@@ -236,3 +242,178 @@ class UserModelSerializerTests(TestCase):
                              ' User instance.')
         with self.assertRaises(ValidationError, msg=test_case_message):
             serializer.save()
+
+
+class UserLoginSerializerTests(TestCase):
+    def setUp(self):
+        self.email = 'user@tester.com'
+        self.first_name = 'User'
+        self.last_name = 'Tester'
+        self.password = 'test'
+        self.phone = {
+            'number': 987465489,
+            'area_code': 81,
+            'country_code': '+55'
+        }
+
+        self.user = baker.make(
+            User, email=self.email, first_name=self.first_name,
+            last_name=self.last_name
+        )
+        self.user.set_password(self.password)
+        self.user.save()
+        self.phone_instance = baker.make(Phone, user=self.user, **self.phone)
+
+    def test_userloginserializer_missing_fields(self):
+        """Checks User instance login using UserLoginSerializer
+
+        Test if UserLoginSerializer deserialization is invalid due to missing
+        mandatory field."""
+        data = {}
+        serializer = UserLoginSerializer(data=data)
+        self.assertFalse(
+            serializer.is_valid(),
+            msg="""User deserialization should not be valid since the email and
+            password fields are missing."""
+        )
+        self.assertIn(
+            'non_field_errors',
+            serializer.errors
+        )
+        self.assertEqual(
+            str(serializer.errors.get('non_field_errors')[0]),
+            MISSING_FIELD_ERROR
+        )
+
+        data = {
+            'email': self.email
+        }
+        serializer = UserLoginSerializer(data=data)
+        self.assertFalse(
+            serializer.is_valid(),
+            msg="""User deserialization should not be valid since the password
+            field is missing."""
+        )
+        self.assertIn(
+            'non_field_errors',
+            serializer.errors
+        )
+        self.assertEqual(
+            str(serializer.errors.get('non_field_errors')[0]),
+            MISSING_FIELD_ERROR
+        )
+
+        data = {
+            'password': self.password
+        }
+        serializer = UserLoginSerializer(data=data)
+        self.assertFalse(
+            serializer.is_valid(),
+            msg="""User deserialization should not be valid since the email
+            field is missing."""
+        )
+        self.assertIn(
+            'non_field_errors',
+            serializer.errors
+        )
+        self.assertEqual(
+            str(serializer.errors.get('non_field_errors')[0]),
+            MISSING_FIELD_ERROR
+        )
+
+    def test_userloginserializer_email_not_registered(self):
+        """Checks User instance login using UserLoginSerializer
+
+        Test if UserLoginSerializer deserialization is invalid due email not in
+        the database."""
+        data = {
+            'email': 'tester123@tester.com',
+            'password': 'tester123'
+        }
+        serializer = UserLoginSerializer(data=data)
+        self.assertFalse(
+            serializer.is_valid(),
+            msg="""User deserialization should not be valid since the email
+            does not belong to any user."""
+        )
+        self.assertIn(
+            'non_field_errors',
+            serializer.errors
+        )
+        self.assertEqual(
+            str(serializer.errors.get('non_field_errors')[0]),
+            INVALID_LOGIN_ERROR
+        )
+
+    def test_userloginserializer_invalid_credentials(self):
+        """Checks User instance login using UserLoginSerializer
+
+        Test if UserLoginSerializer deserialization is invalid due invalid
+        credentials."""
+        data = {
+            'email': self.email,
+            'password': 'tester123'
+        }
+        serializer = UserLoginSerializer(data=data)
+        self.assertFalse(
+            serializer.is_valid(),
+            msg="""User deserialization should not be valid since the password
+            is wrong."""
+        )
+        self.assertIn(
+            'non_field_errors',
+            serializer.errors
+        )
+        self.assertEqual(
+            str(serializer.errors.get('non_field_errors')[0]),
+            INVALID_LOGIN_ERROR
+        )
+
+    def test_userloginserializer_token_generation(self):
+        """Checks User instance login using UserLoginSerializer
+
+        Test if UserLoginSerializer deserialization is valid."""
+        time_before_login = timezone.now()
+        data = {
+            'email': self.email,
+            'password': self.password
+        }
+        serializer = UserLoginSerializer(data=data)
+        self.assertTrue(
+            serializer.is_valid(),
+            msg="""User deserialization should be valid since the credentials
+            are correct."""
+        )
+
+        serializer_data = serializer.save()
+        user_data = serializer_data.get('user')
+
+        for key in ['email', 'first_name', 'last_name']:
+            self.assertIn(
+                key,
+                user_data.keys(),
+                msg="""UserLoginSerializer did not return {} information."""
+                .format(key)
+            )
+
+            value = user_data[key]
+            expected_value = getattr(self.user, key)
+            self.assertEqual(
+                value,
+                expected_value,
+                msg="""UserLoginSerializer returned incorrect {} information.
+                Expected: {}. Obtained: {}""".format(
+                    key, expected_value, value
+                )
+            )
+
+        last_login = user_data.get('last_login')
+        last_login = datetime.strptime(last_login, '%Y-%m-%dT%H:%M:%S%f%z')
+        self.assertGreater(
+            last_login,
+            time_before_login,
+            msg="""UserLoginSerializer returned incorrect last_login
+            information. Expected: {}. Obtained: {}""".format(
+                    time_before_login, last_login
+                )
+        )

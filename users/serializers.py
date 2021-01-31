@@ -45,8 +45,12 @@ class UserModelSerializer(serializers.ModelSerializer):
     password = serializers.CharField(
         max_length=255, write_only=True, required=False, allow_blank=True
     )
-    created_at = serializers.DateTimeField(required=False)
-    last_login = serializers.DateTimeField(required=False)
+    created_at = serializers.DateTimeField(
+        required=False, format='%Y-%m-%dT%H:%M:%S%f%z'
+    )
+    last_login = serializers.DateTimeField(
+        required=False, format='%Y-%m-%dT%H:%M:%S%f%z'
+    )
     phones = PhoneSerializer(many=True, required=False)
 
     class Meta:
