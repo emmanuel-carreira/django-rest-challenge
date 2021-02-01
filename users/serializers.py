@@ -5,7 +5,7 @@ from .constants import (
     MISSING_FIELD_ERROR, EMAIL_ALREADY_REGISTERED_ERROR, INVALID_LOGIN_ERROR
 )
 from .models import User, Phone
-from .utils import get_token_for_user
+from .utils import get_token_for_user, format_data
 
 
 class PhoneSerializer(serializers.ModelSerializer):
@@ -100,7 +100,7 @@ class UserLoginSerializer(serializers.Serializer):
 
         user_serializer = UserModelSerializer(user)
         response_data = {
-            'user': user_serializer.data,
+            'user': format_data(user_serializer.data),
             'token': get_token_for_user(user)
         }
 
