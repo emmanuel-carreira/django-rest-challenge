@@ -4,7 +4,7 @@ from rest_framework import generics, status, views
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from .serializers import UserModelSerializer, UserLoginSerializer
-from .utils import get_token_for_user
+from .utils import get_token_for_user, format_data
 
 
 class UserCreateView(generics.CreateAPIView):
@@ -21,7 +21,7 @@ class UserCreateView(generics.CreateAPIView):
             user = serializer.save()
             token = get_token_for_user(user)
             response_data = {
-                'user': serializer.data,
+                'user': format_data(serializer.data),
                 'token': token
             }
             return Response(response_data, status=status.HTTP_201_CREATED)
@@ -71,6 +71,6 @@ class UserRetrieveView(generics.RetrieveAPIView):
             return Response(response_data, status=status.HTTP_401_UNAUTHORIZED)
 
         serializer = self.get_serializer(user)
-        response_data = {'user': serializer.data}
+        response_data = {'user': format_data(serializer.data)}
 
         return Response(response_data, status=status.HTTP_200_OK)
