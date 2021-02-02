@@ -15,7 +15,7 @@ class PhoneSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Phone
-        exclude = ['user']
+        exclude = ['id', 'user']
 
     def create(self, validated_data):
         raise serializers.ValidationError('Create not allowed')
