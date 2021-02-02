@@ -26,9 +26,9 @@ class UserCreateView(generics.CreateAPIView):
             }
             return Response(response_data, status=status.HTTP_201_CREATED)
 
-        error = serializer.errors.get('non_field_errors')
+        error = serializer.errors.get('non_field_errors')[0]
         if not error:
-            error = serializer.errors.get('phones')[0].get('non_field_errors')
+            error = serializer.errors.get('phones')[0].get('non_field_errors')[0]
 
         response_data = {
             'message': error,
@@ -44,7 +44,7 @@ class UserLoginView(views.APIView):
             response_data = serializer.save()
             return Response(response_data, status=status.HTTP_200_OK)
 
-        error = serializer.errors.get('non_field_errors')
+        error = serializer.errors.get('non_field_errors')[0]
         response_data = {
             'message': error,
             'errorCode': 400
