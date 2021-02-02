@@ -26,9 +26,14 @@ class UserCreateView(generics.CreateAPIView):
             }
             return Response(response_data, status=status.HTTP_201_CREATED)
 
-        error = serializer.errors.get('non_field_errors')[0]
+        try:
+            error = serializer.errors.get('non_field_errors')[0]
+        except TypeError:
+            error = serializer.errors.get('non_field_errors')
         if not error:
-            error = serializer.errors.get('phones')[0].get('non_field_errors')[0]
+            error = (
+                serializer.errors.get('phones')[0].get('non_field_errors')[0]
+            )
 
         response_data = {
             'message': error,
