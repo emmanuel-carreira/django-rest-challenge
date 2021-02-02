@@ -4,7 +4,7 @@ from model_bakery import baker
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from users.models import User
-from users.utils import get_token_for_user
+from users.utils import get_token_for_user, format_data
 
 
 class UtilsTests(TestCase):
@@ -22,4 +22,73 @@ class UtilsTests(TestCase):
             token_user,
             msg="""Wrong User for token {}. Expected: {}. Obtained: {}."""
             .format(token, self.user, token_user)
+        )
+
+    def test_format_data(self):
+        """Checks if format_data() replaces first_name and last_name fields"""
+        email = 'abc@hotmail.com'
+        first_name = 'test first name'
+        last_name = 'test last name'
+        data = {
+            'email': email,
+            'first_name': first_name,
+            'last_name': last_name
+        }
+
+        data = format_data(data)
+
+        self.assertNotIn(
+            'first_name',
+            data.keys(),
+            msg="""first_name field should not be present in dict after
+            format_data() data treatment."""
+        )
+        self.assertNotIn(
+            'last_name',
+            data.keys(),
+            msg="""last_name field should not be present in dict after
+            format_data() data treatment."""
+        )
+
+        self.assertIn(
+            'firstName',
+            data.keys(),
+            msg="""firstName field should be present in dict after
+            format_data() data treatment."""
+        )
+        self.assertEqual(
+            data.get('firstName'),
+            first_name,
+            msg="""firstName field differs from original first_name field after
+            format_data() data treatment. Expected: {}. Obtained: {}""".format(
+                first_name, data.get('firstName')
+            )
+        )
+
+        self.assertIn(
+            'lastName',
+            data.keys(),
+            msg="""lastName field should be present in dict after
+            format_data() data treatment."""
+        )
+        self.assertEqual(
+            data.get('lastName'),
+            last_name,
+            msg="""lastName field differs from original last_name field after
+            format_data() data treatment. Expected: {}. Obtained: {}""".format(
+                last_name, data.get('lastName')
+            )
+        )
+
+        self.assertIn(
+            'email',
+            data.keys(),
+            msg="""email field should be present in dict after
+            format_data() data treatment."""
+        )
+        self.assertEqual(
+            data.get('email'),
+            email,
+            msg="""format_data() should not change values other than first_name
+            and last_name."""
         )
